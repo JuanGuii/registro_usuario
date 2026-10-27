@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registro e inicio de sesión</title>
+
+  <style>
+    /* ============================================================
+       ESTILOS (antes css/styles.css — ahora van embebidos aquí,
+       por eso ya no puede fallar la carga con error 404)
+       ============================================================ */
+
+    /* Variables de color reutilizables en toda la página */
+    :root {
+      --primario: #2563eb;
+      --primario-oscuro: #1e40af;
+      --peligro: #dc2626;
+      --exito: #16a34a;
+      --fondo: #eef2f7;
+      --tarjeta: #ffffff;
+      --borde: #cbd5e1;
+      --texto: #1e293b;
+      --texto-suave: #64748b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 24px 12px;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--fondo);
+      color: var(--texto);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .contenedor { width: 100%; max-width: 440px; }
+
+    /* Tarjeta blanca que envuelve cada formulario */
+    .tarjeta {
+      background: var(--tarjeta);
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 12px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+    }
+
+    /* Vistas: solo se muestra la sección que tiene la clase .activa */
+    .vista { display: none; }
+    .vista.activa { display: block; }
+
+    /* Pestañas superiores */
+    .pestanas { display: flex; gap: 8px; }
+    .pestana {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid var(--borde);
+      background: #ffffff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--texto-suave);
+    }
+    .pestana.activo {
+      background: var(--primario);
+      border-color: var(--primario);
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* Campos del formulario */
+    .campo { margin-bottom: 14px; }
+    .campo label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .campo input[type="text"],
+    .campo input[type="email"],
+    .campo input[type="password"],
+    .campo input[type="tel"],
+    .campo input[type="date"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+      background: #ffffff;
+      color: var(--texto);
+    }
+    .campo input:focus {
+      border-color: var(--primario);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+    /* Borde rojo cuando el campo tiene un error */
+    .campo input.invalido { border-color: var(--peligro); }
+
+    /* Mensajes de error que aparecen bajo cada campo */
+    .campo .error {
+      display: block;
+      color: var(--peligro);
+      font-size: 12px;
+      margin-top: 4px;
+      min-height: 15px;
+    }
+
+    /* Casilla de términos y condiciones */
+    .fila-check { display: flex; align-items: flex-start; gap: 8px; }
+    .fila-check input { margin-top: 3px; }
+    .fila-check label { font-weight: 400; margin-bottom: 0; }
+    .fila-check .error { flex-basis: 100%; }
+
+    /* Botón del ojo para ver/ocultar la contraseña */
+    .con-boton { position: relative; }
+    .con-boton input { padding-right: 42px; }
+    .btn-ver {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px 6px;
+      line-height: 1;
+    }
+
+    /* Medidor de fortaleza de la contraseña */
+    .medidor { margin-top: 6px; }
+    .medidor-barra {
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .medidor-relleno {
+      height: 100%;
+      width: 0;
+      background: transparent;
+      transition: width 0.25s ease, background 0.25s ease;
+    }
+    .medidor-texto { font-size: 11px; color: var(--texto-suave); }
+
+    /* Botones principales y secundarios */
+    .boton {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 8px;
+      background: var(--primario);
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    .boton:hover { background: var(--primario-oscuro); }
+    .boton-secundario {
+      background: #ffffff;
+      color: var(--primario);
+      border: 1px solid var(--primario);
+    }
+    .boton-secundario:hover { background: #eff6ff; }
+
+    /* Enlaces con apariencia de botón de texto */
+    .enlace {
+      background: none;
+      border: none;
+      color: var(--primario);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 0;
+      text-decoration: underline;
+    }
+    .acciones-secundarias {
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Alertas y estados */
+    .alerta {
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+    .alerta.exito { background: #dcfce7; color: #14532d; border: 1px solid #86efac; }
+    .alerta.info { background: #dbeafe; color: #1e3a8a; border: 1px solid #93c5fd; }
+    .alerta.peligro { background: #fee2e2; color: #7f1d1d; border: 1px solid #fca5a5; }
+    .oculto { display: none !important; }
+
+    /* Caja que mostraba el código 2FA en pantalla: ELIMINADA.
+       El código llega de verdad al correo del usuario con EmailJS. */
+
+    /* Bandeja de entrada simulada (recuperación): ELIMINADA.
+       El código ahora llega de verdad al correo con EmailJS. */
+
+    /* Fila inferior con los botones generales de la demo */
+    .pie-demo { display: flex; gap: 8px; margin-top: 12px; }
+    .pie-demo .boton { margin-top: 0; }
+
+    .margen-arriba { margin-top: 14px; }
+
+    /* Adaptación a pantallas pequeñas */
+    @media (max-width: 420px) {
+      body { padding: 12px 8px; }
+      .tarjeta { padding: 14px; }
+      .pestanas { flex-direction: column; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="contenedor">
+
+    <!-- ===== PESTAÑAS DE NAVEGACIÓN ===== -->
+    <nav class="pestanas">
+      <button type="button" class="pestana activo" data-vista="registro">Crear cuenta</button>
+      <button type="button" class="pestana" data-vista="login">Iniciar sesión</button>
+    </nav>
+
+    <!-- ===== VISTA 1: REGISTRO ===== -->
+    <section class="vista activa" id="vista-registro">
+      <div class="tarjeta">
+        <form id="form-registro" novalidate>
+          <div class="campo">
+            <label for="reg-nombre">Nombre completo</label>
+            <input type="text" id="reg-nombre" maxlength="50" autocomplete="name" />
+            <small class="error" id="error-reg-nombre"></small>
+          </div>
+
+          <div class="campo">
+            <label for="reg-correo">Correo electrónico</label>
+            <input type="email" id="reg-correo" maxlength="50" autocomplete="email" />
+            <small class="error" id="error-reg-correo"></small>
+          </div>
+
+          <div class="campo">
+            <label for="reg-usuario">Nombre de usuario</label>
+            <input type="text" id="reg-usuario" maxlength="20" autocomplete="username" />
+            <small class="error" id="error-reg-usuario"></small>
+          </div>
+
+          <div class="campo">
+            <label for="reg-telefono">Teléfono (solo números, 10 dígitos)</label>
+            <input type="tel" id="reg-telefono" maxlength="10" inputmode="numeric" autocomplete="tel" />
+            <small class="error" id="error-reg-telefono"></small>
+          </div>
+
+          <div class="campo">
+            <label for="reg-fecha">Fecha de nacimiento</label>
+            <input type="date" id="reg-fecha" />
+            <small class="error" id="error-reg-fecha"></small>
+          </div>
+
+          <div class="campo">
+            <label for="reg-documento">Número de documento</label>
+            <input type="text" inputmode="numeric" id="reg-documento" maxlength="10" />
+            <small class="error" id="error-reg-documento"></small>
+          </div>
+
+          <div class="campo">
+            <label for="reg-clave">Contraseña (8 a 12 caracteres)</label>
+            <div class="con-boton">
+              <input type="password" id="reg-clave" maxlength="12" autocomplete="new-password" />
+              <button type="button" class="btn-ver" data-objetivo="reg-clave" title="Mostrar u ocultar la contraseña">👁</button>
+            </div>
+            <div class="medidor">
+              <div class="medidor-barra"><div class="medidor-relleno" id="medidor-reg-relleno"></div></div>
+              <span class="medidor-texto" id="medidor-reg-texto"></span>
+            </div>
+            <small class="error" id="error-reg-clave"></small>
+          </div>
+
+          <div class="campo">
+            <label for="reg-clave2">Confirmar contraseña</label>
+            <div class="con-boton">
+              <input type="password" id="reg-clave2" maxlength="12" autocomplete="new-password" />
+              <button type="button" class="btn-ver" data-objetivo="reg-clave2" title="Mostrar u ocultar la contraseña">👁</button>
+            </div>
+            <small class="error" id="error-reg-clave2"></small>
+          </div>
+
+          <div class="campo fila-check">
+            <input type="checkbox" id="reg-terminos" />
+            <label for="reg-terminos">Acepto los términos y el tratamiento de datos</label>
+            <small class="error" id="error-reg-terminos"></small>
+          </div>
+
+          <button type="submit" class="boton">Crear cuenta</button>
+        </form>
+
+      </div>
+    </section>
+
+    <!-- ===== VISTA 2: INICIO DE SESIÓN ===== -->
+    <section class="vista" id="vista-login">
+      <div class="tarjeta">
+        <form id="form-login" novalidate>
+          <div class="campo">
+            <label for="log-usuario">Usuario o correo</label>
+            <input type="text" id="log-usuario" autocomplete="username" />
+            <small class="error" id="error-log-usuario"></small>
+          </div>
+
+          <div class="campo">
+            <label for="log-clave">Contraseña</label>
+            <div class="con-boton">
+              <input type="password" id="log-clave" autocomplete="current-password" />
+              <button type="button" class="btn-ver" data-objetivo="log-clave" title="Mostrar u ocultar la contraseña">👁</button>
+            </div>
+            <small class="error" id="error-log-clave"></small>
+          </div>
+
+          <button type="submit" class="boton">Iniciar sesión</button>
+
+          <div class="acciones-secundarias">
+            <button type="button" class="enlace" data-vista="recuperar">¿Olvidaste tu contraseña?</button>
+          </div>
+
+          <!-- Aviso de bloqueo por intentos fallidos (cuenta atrás) -->
+          <div class="alerta peligro oculto" id="log-bloqueo"></div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         VISTA DEL CÓDIGO 2FA EN EL LOGIN: ELIMINADA.
+         El inicio de sesión ya NO pide código por correo: quien
+         recuerda su contraseña entra directo con usuario y clave.
+         El código enviado al correo SOLO se usa para recuperar una
+         contraseña olvidada (vista-recuperar).
+         ============================================================ -->
+
+    <!-- ===== VISTA 3: RECUPERAR CONTRASEÑA ===== -->
+    <section class="vista" id="vista-recuperar">
+      <div class="tarjeta">
+        <form id="form-recuperar" novalidate>
+          <div class="campo">
+            <label for="rec-correo">Correo de la cuenta</label>
+            <input type="email" id="rec-correo" maxlength="50" autocomplete="email" />
+            <small class="error" id="error-rec-correo"></small>
+          </div>
+
+          <!-- PASO 1: el código sale DE VERDAD al correo registrado -->
+          <button type="button" class="boton" id="btn-enviar-codigo">Enviar código al correo</button>
+
+          <div class="campo margen-arriba">
+            <label for="rec-codigo">Código de verificación (llegó al correo)</label>
+            <input type="text" inputmode="numeric" id="rec-codigo" maxlength="6" />
+            <small class="error" id="error-rec-codigo"></small>
+          </div>
+
+          <!-- PASO 2: verifica el código recibido en el correo -->
+          <button type="submit" class="boton">Verificar código</button>
+
+          <div class="acciones-secundarias">
+            <button type="button" class="enlace" data-vista="login">Volver al inicio de sesión</button>
+          </div>
+
+          <!-- Mensaje genérico: nunca revela si el correo existe o no -->
+          <div class="alerta info oculto" id="rec-mensaje"></div>
+
+          <!-- Aviso de problema al enviar (EmailJS sin configurar, sin internet, etc.) -->
+          <div class="alerta peligro oculto" id="rec-aviso"></div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===== VISTA 4: NUEVA CONTRASEÑA ===== -->
+    <section class="vista" id="vista-nueva">
+      <div class="tarjeta">
+        <form id="form-nueva" novalidate>
+          <div class="campo">
+            <label for="nueva-clave">Nueva contraseña (8 a 12 caracteres)</label>
+            <div class="con-boton">
+              <input type="password" id="nueva-clave" maxlength="12" autocomplete="new-password" />
+              <button type="button" class="btn-ver" data-objetivo="nueva-clave" title="Mostrar u ocultar la contraseña">👁</button>
+            </div>
+            <div class="medidor">
+              <div class="medidor-barra"><div class="medidor-relleno" id="medidor-nueva-relleno"></div></div>
+              <span class="medidor-texto" id="medidor-nueva-texto"></span>
+            </div>
+            <small class="error" id="error-nueva-clave"></small>
+          </div>
+
+          <div class="campo">
+            <label for="nueva-clave2">Confirmar nueva contraseña</label>
+            <div class="con-boton">
+              <input type="password" id="nueva-clave2" maxlength="12" autocomplete="new-password" />
+              <button type="button" class="btn-ver" data-objetivo="nueva-clave2" title="Mostrar u ocultar la contraseña">👁</button>
+            </div>
+            <small class="error" id="error-nueva-clave2"></small>
+          </div>
+
+          <button type="submit" class="boton">Guardar contraseña</button>
+
+          <div class="alerta exito oculto" id="nueva-mensaje"></div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===== BOTONES GENERALES DE LA DEMO ===== -->
+    <div class="pie-demo">
+      <button type="button" class="boton boton-secundario" id="btn-demo">Rellenar datos de prueba</button>
+      <button type="button" class="boton boton-secundario" id="btn-reiniciar">Borrar datos de la demo</button>
+    </div>
+
+  </main>
+
+  <!-- Librería EmailJS (CDN): permite enviar correos DE VERDAD desde el
+       navegador con tu propia cuenta (Gmail, Outlook, etc.).
+       Necesita conexión a internet para cargar y para enviar. -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <!-- ============================================================
+       CONFIGURACIÓN DEL CORREO REAL — EDITA ESTOS 3 VALORES
+       (Se hace UNA sola vez; tarda unos 5 minutos)
+
+       1) Crea una cuenta gratis en https://www.emailjs.com/
+       2) Panel "Email Services" → "Add New Service" → conecta tu
+          cuenta de Gmail/Outlook → copia el Service ID.
+       3) Panel "Email Templates" → "Create New Template":
+            - En el campo "To Email" escribe:  {{to_email}}
+              (así el correo llega a la dirección del usuario registrado)
+            - En asunto/cuerpo puedes usar: {{to_name}}, {{codigo}},
+              {{minutos}}. Ejemplo de cuerpo:
+              "Hola {{to_name}}, tu código de verificación es {{codigo}}.
+               Expira en {{minutos}} minutos."
+          → copia el Template ID.
+       4) Panel "Account" → pestaña "General" → copia tu Public Key.
+       5) Pega los tres valores aquí abajo, entre las comillas.
+
+       Plan gratuito: ~200 correos al mes. El código sale desde TU
+       cuenta conectada y llega a la bandeja real del usuario.
+       ============================================================ -->
+  <script>
+    window.CONFIG_EMAILJS = {
+      serviceId: "service_cf2qmd8",
+      templateId: "template_met78wr",
+      publicKey: "ircSLwSaOl122Lrml"
+    };
+  </script>
+
+  <!-- ============================================================
+       BLOQUE 1 DE JAVASCRIPT — VALIDACIONES (lado cliente)
+       (antes js/validaciones.js — ahora embebido)
+       Cada método devuelve:
+         { ok: true,  valor: ... }   → el dato es válido
+         { ok: false, mensaje: "…"}  → hay un error que mostrar
+       ============================================================ -->
+  <script>
+    const Validaciones = {
+
+      // Contraseñas demasiado comunes (lista negra, criterio NIST)
+      COMUNES: [
+        "12345678", "123456789", "1234567890", "password", "password1",
+        "contrasena", "contraseña", "qwerty123", "11111111", "00000000",
+        "iloveyou1", "admin1234", "abc12345"
+      ],
+
+      // Símbolos que la política prohíbe dentro de la contraseña:
+      // menor que, mayor que, barra, comilla simple, comilla doble y ampersand
+      PROHIBIDOS: ["<", ">", "/", "'", '"', "&"],
+
+      // Quita los espacios del inicio y del final de cualquier valor
+      limpiar(valor) {
+        return String(valor ?? "").trim();
+      },
+
+      // Detecta espacios al inicio o al final del valor escrito.
+      // Ya NO se corrigen en silencio: se muestra una ADVERTENCIA y se
+      // bloquea el envío hasta que el usuario quite esos espacios.
+      tieneEspaciosExtremos(valor) {
+        const v = String(valor ?? "");
+        return v !== v.trim();
+      },
+
+      // Nombre completo: 2 a 50 letras (admite acentos, ñ, apóstrofe y guion)
+      nombreCompleto(valor) {
+        const v = this.limpiar(valor);
+        if (!v) return { ok: false, mensaje: "El nombre es obligatorio." };
+        if (v.length < 2 || v.length > 50) {
+          return { ok: false, mensaje: "El nombre debe tener entre 2 y 50 caracteres." };
+        }
+        if (!/^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ' -]+$/.test(v)) {
+          return { ok: false, mensaje: "El nombre solo admite letras, espacios, apóstrofes y guiones." };
+        }
+        return { ok: true, valor: v };
+      },
+
+      // Correo: formato válido y máximo 50 caracteres (se guarda en minúsculas)
+      correo(valor) {
+        const v = this.limpiar(valor).toLowerCase();
+        if (!v) return { ok: false, mensaje: "El correo es obligatorio." };
+        if (v.length > 50) {
+          return { ok: false, mensaje: "El correo no puede superar los 50 caracteres." };
+        }
+        if (!/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(v)) {
+          return { ok: false, mensaje: "Escribe un correo válido (nombre@dominio.com)." };
+        }
+        return { ok: true, valor: v };
+      },
+
+      // Usuario: 3 a 20 caracteres; letras, números, guion y guion bajo
+      nombreUsuario(valor) {
+        const v = this.limpiar(valor);
+        if (!v) return { ok: false, mensaje: "El usuario es obligatorio." };
+        if (v.length < 3 || v.length > 20) {
+          return { ok: false, mensaje: "El usuario debe tener entre 3 y 20 caracteres." };
+        }
+        if (!/^[A-Za-z0-9_-]+$/.test(v)) {
+          return { ok: false, mensaje: "El usuario solo admite letras, números, guion y guion bajo." };
+        }
+        return { ok: true, valor: v };
+      },
+
+      // Teléfono: SOLO números y exactamente 10 caracteres.
+      // (El campo, además, filtra lo que no sea dígito mientras se escribe)
+      telefono(valor) {
+        const v = this.limpiar(valor);
+        if (!v) return { ok: false, mensaje: "El teléfono es obligatorio." };
+        if (!/^\d{10}$/.test(v)) {
+          return { ok: false, mensaje: "El teléfono solo admite números y debe tener 10 dígitos." };
+        }
+        return { ok: true, valor: "+57" + v };
+      },
+
+      // Fecha de nacimiento: fecha real, no futura y con al menos 14 años
+      fechaNacimiento(valor) {
+        const v = this.limpiar(valor);
+        if (!v) return { ok: false, mensaje: "La fecha de nacimiento es obligatoria." };
+
+        const fecha = new Date(v + "T00:00:00");
+        if (isNaN(fecha.getTime())) {
+          return { ok: false, mensaje: "La fecha no es válida." };
+        }
+
+        const hoy = new Date();
+        if (fecha > hoy) {
+          return { ok: false, mensaje: "La fecha no puede ser futura." };
+        }
+
+        // Cálculo de la edad (años completos)
+        let edad = hoy.getFullYear() - fecha.getFullYear();
+        const mes = hoy.getMonth() - fecha.getMonth();
+        if (mes < 0 || (mes === 0 && hoy.getDate() < fecha.getDate())) edad--;
+
+        if (edad < 14) {
+          return { ok: false, mensaje: "Debes tener al menos 14 años para registrarte." };
+        }
+        if (edad > 120) {
+          return { ok: false, mensaje: "Revisa la fecha: la edad no es razonable." };
+        }
+        return { ok: true, valor: v };
+      },
+
+      // Documento: entre 6 y 10 dígitos numéricos
+      documento(valor) {
+        const v = this.limpiar(valor);
+        if (!v) return { ok: false, mensaje: "El documento es obligatorio." };
+        if (!/^\d{6,10}$/.test(v)) {
+          return { ok: false, mensaje: "El documento debe tener entre 6 y 10 dígitos." };
+        }
+        return { ok: true, valor: v };
+      },
+
+      // Contraseña según NIST SP 800-63B:
+      //  - 8 a 12 caracteres
+      //  - sin los símbolos prohibidos: <  >  /  '  "  &
+      //  - DEBE incluir mayúsculas, minúsculas, números y caracteres
+      //    especiales; si falta alguno es DÉBIL y se rechaza
+      //  - que no sea (ni contenga) una contraseña común
+      //  - que no contenga datos personales del titular
+      // OJO: aquí NO se hace trim: los espacios de los extremos se
+      //      advierten aparte con tieneEspaciosExtremos()
+      contrasena(valor, datosPersonales) {
+        const v = String(valor ?? "");
+        if (v.length < 8 || v.length > 12) {
+          return { ok: false, mensaje: "La contraseña debe tener entre 8 y 12 caracteres." };
+        }
+        for (const c of this.PROHIBIDOS) {
+          if (v.includes(c)) {
+            return { ok: false, mensaje: 'La contraseña no puede contener el símbolo "' + c + '".' };
+          }
+        }
+
+        // REQUISITO DE COMPLEJIDAD: la contraseña debe incluir, al mismo
+        // tiempo, mayúsculas, minúsculas, números y caracteres especiales.
+        // Si falta alguno, la contraseña es DÉBIL y NO se acepta.
+        const tieneMayuscula = /[A-Z]/.test(v);
+        const tieneMinuscula = /[a-z]/.test(v);
+        const tieneNumero = /\d/.test(v);
+        const tieneEspecial = /[\p{S}\p{P}]/u.test(v);
+        if (!tieneMayuscula || !tieneMinuscula || !tieneNumero || !tieneEspecial) {
+          const faltan = [];
+          if (!tieneMayuscula) faltan.push("mayúsculas");
+          if (!tieneMinuscula) faltan.push("minúsculas");
+          if (!tieneNumero) faltan.push("números");
+          if (!tieneEspecial) faltan.push("caracteres especiales");
+          return {
+            ok: false,
+            mensaje: "Contraseña débil: debe incluir " + faltan.join(", ") + "."
+          };
+        }
+
+        const minusculas = v.toLowerCase();
+        if (this.COMUNES.some((comun) => minusculas.includes(comun))) {
+          return { ok: false, mensaje: "Esa contraseña es demasiado común. Elige otra más segura." };
+        }
+        if (datosPersonales) {
+          // Se parte el nombre en palabras y se compara contra la clave
+          const trozos = [];
+          if (datosPersonales.nombre) {
+            trozos.push(...String(datosPersonales.nombre).toLowerCase().split(/\s+/));
+          }
+          if (datosPersonales.usuario) trozos.push(String(datosPersonales.usuario).toLowerCase());
+          if (datosPersonales.correo) trozos.push(String(datosPersonales.correo).split("@")[0]);
+          const contiene = trozos.some((t) => t.length >= 3 && minusculas.includes(t));
+          if (contiene) {
+            return { ok: false, mensaje: "La contraseña no puede contener tus datos personales." };
+          }
+        }
+        return { ok: true, valor: v };
+      },
+
+      // Fortaleza de la contraseña: puntaje de 0 a 4 para el medidor
+      fortaleza(valor) {
+        let puntos = 0;
+        if (String(valor).length >= 8) puntos++;
+        if (/[a-z]/.test(valor) && /[A-Z]/.test(valor)) puntos++;
+        if (/\d/.test(valor)) puntos++;
+        if (/[\p{S}\p{P}]/u.test(valor)) puntos++;
+        return puntos;
+      }
+    };
+  </script>
+
+  <!-- ============================================================
+       BLOQUE 2 DE JAVASCRIPT — SERVIDOR SIMULADO
+       (antes js/servidor.js — ahora embebido)
+       Hace el papel de un servidor real:
+         - guarda los usuarios en localStorage (la "base de datos")
+         - guarda el código de recuperación y la sesión en sessionStorage
+         - vuelve a comprobar TODAS las reglas: la validación del
+           cliente es solo una ayuda, nunca una garantía
+       ============================================================ -->
+  <script>
+    const Servidor = (function () {
+      "use strict";
+
+      // ----- Configuración de la demo -----
+      const CLAVE_DB = "demo_usuarios";        // usuarios registrados (localStorage)
+      const CLAVE_INTENTOS = "demo_intentos";  // intentos fallidos de sesión (localStorage)
+      const MAX_INTENTOS = 5;                  // fallos permitidos antes del bloqueo
+      const BLOQUEO_MS = 60000;                // bloqueo de 60 segundos
+      const TOKEN_MS = 1800000;                // código de recuperación válido por 30 minutos
+
+      // ----- Helpers de la "base de datos" (localStorage) -----
+      function leerDB() {
+        try {
+          const bruto = localStorage.getItem(CLAVE_DB);
+          return bruto ? JSON.parse(bruto) : [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function escribirDB(lista) {
+        localStorage.setItem(CLAVE_DB, JSON.stringify(lista));
+      }
+
+      // ----- Helpers de sessionStorage -----
+      function leerSession(clave) {
+        try {
+          const bruto = sessionStorage.getItem(clave);
+          return bruto ? JSON.parse(bruto) : null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function escribirSession(clave, valor) {
+        sessionStorage.setItem(clave, JSON.stringify(valor));
+      }
+
+      // ----- Hash de la contraseña (SHA-256 con respaldo didáctico) -----
+      async function hash(texto) {
+        if (window.crypto && window.crypto.subtle) {
+          const bytes = new TextEncoder().encode(texto);
+          const buffer = await window.crypto.subtle.digest("SHA-256", bytes);
+          return Array.from(new Uint8Array(buffer))
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+        }
+        // Respaldo si el navegador no ofrece crypto.subtle: FNV-1a doble.
+        // (Solo para la demo: un servidor real usaría bcrypt/argon2)
+        let h1 = 0x811c9dc5;
+        let h2 = 0xdeadbeef;
+        for (let i = 0; i < texto.length; i++) {
+          h1 = ((h1 ^ texto.charCodeAt(i)) * 0x01000193) >>> 0;
+          h2 = (((h2 + texto.charCodeAt(i) * (i + 7)) >>> 0) ^ h1) >>> 0;
+        }
+        return "fnv-" + h1.toString(16).padStart(8, "0") + "-" + h2.toString(16).padStart(8, "0");
+      }
+
+      // ----- Control de intentos fallidos del inicio de sesión -----
+      function leerIntentos() {
+        try {
+          const bruto = localStorage.getItem(CLAVE_INTENTOS);
+          return bruto ? JSON.parse(bruto) : {};
+        } catch (e) {
+          return {};
+        }
+      }
+
+      function guardarIntentos(datos) {
+        localStorage.setItem(CLAVE_INTENTOS, JSON.stringify(datos));
+      }
+
+      // Suma un fallo para esa identidad y devuelve el registro actualizado
+      function registrarFallo(identidad) {
+        const datos = leerIntentos();
+        const clave = String(identidad).toLowerCase();
+        const ahora = Date.now();
+        const registro = datos[clave];
+        if (registro && ahora - registro.inicio < BLOQUEO_MS) {
+          registro.fallos += 1;
+        } else {
+          datos[clave] = { fallos: 1, inicio: ahora };
+        }
+        guardarIntentos(datos);
+        return datos[clave];
+      }
+
+      function limpiarIntentos(identidad) {
+        const datos = leerIntentos();
+        delete datos[String(identidad).toLowerCase()];
+        guardarIntentos(datos);
+      }
+
+      // ¿Está bloqueada esa identidad en este momento?
+      function estadoBloqueo(identidad) {
+        const datos = leerIntentos();
+        const registro = datos[String(identidad).toLowerCase()];
+        if (!registro) return { bloqueado: false, msRestantes: 0 };
+        const transcurrido = Date.now() - registro.inicio;
+        if (registro.fallos >= MAX_INTENTOS && transcurrido < BLOQUEO_MS) {
+          return { bloqueado: true, msRestantes: BLOQUEO_MS - transcurrido };
+        }
+        return { bloqueado: false, msRestantes: 0 };
+      }
+
+      // ================= REGISTRO =================
+      async function registrar(datos) {
+        const db = leerDB();
+
+        // 0) El servidor también advierte y rechaza espacios en los extremos
+        const revisarEspacios = [
+          ["reg-nombre", datos.nombre],
+          ["reg-correo", datos.correo],
+          ["reg-usuario", datos.usuario],
+          ["reg-telefono", datos.telefono],
+          ["reg-fecha", datos.fecha],
+          ["reg-documento", datos.documento],
+          ["reg-clave", datos.clave],
+          ["reg-clave2", datos.clave2]
+        ];
+        for (const par of revisarEspacios) {
+          if (Validaciones.tieneEspaciosExtremos(par[1])) {
+            return {
+              ok: false,
+              campo: par[0],
+              mensaje: "No se permiten espacios al inicio ni al final."
+            };
+          }
+        }
+
+        // 1) El servidor repite TODAS las validaciones (regla de oro)
+        const v1 = Validaciones.nombreCompleto(datos.nombre);
+        if (!v1.ok) return { ok: false, campo: "reg-nombre", mensaje: v1.mensaje };
+
+        const v2 = Validaciones.correo(datos.correo);
+        if (!v2.ok) return { ok: false, campo: "reg-correo", mensaje: v2.mensaje };
+
+        const v3 = Validaciones.nombreUsuario(datos.usuario);
+        if (!v3.ok) return { ok: false, campo: "reg-usuario", mensaje: v3.mensaje };
+
+        const v4 = Validaciones.telefono(datos.telefono);
+        if (!v4.ok) return { ok: false, campo: "reg-telefono", mensaje: v4.mensaje };
+
+        const v5 = Validaciones.fechaNacimiento(datos.fecha);
+        if (!v5.ok) return { ok: false, campo: "reg-fecha", mensaje: v5.mensaje };
+
+        const v6 = Validaciones.documento(datos.documento);
+        if (!v6.ok) return { ok: false, campo: "reg-documento", mensaje: v6.mensaje };
+
+        const v7 = Validaciones.contrasena(datos.clave, {
+          nombre: datos.nombre,
+          usuario: datos.usuario,
+          correo: datos.correo
+        });
+        if (!v7.ok) return { ok: false, campo: "reg-clave", mensaje: v7.mensaje };
+
+        if (datos.clave !== datos.clave2) {
+          return { ok: false, campo: "reg-clave2", mensaje: "Las contraseñas no coinciden." };
+        }
+        if (!datos.terminos) {
+          return { ok: false, campo: "reg-terminos", mensaje: "Debes aceptar los términos." };
+        }
+
+        // 2) Unicidad de correo, usuario y documento: solo el servidor
+        //    puede garantizarla de verdad
+        const correo = v2.valor;
+        const usuario = v3.valor.toLowerCase();
+        const documento = v6.valor;
+        const repetido = db.some((u) =>
+          u.correo === correo ||
+          u.usuario.toLowerCase() === usuario ||
+          u.documento === documento
+        );
+        if (repetido) {
+          return {
+            ok: false,
+            campo: "reg-correo",
+            mensaje: "Ya existe una cuenta con ese correo, usuario o documento."
+          };
+        }
+
+        // 3) Se guarda el HASH de la contraseña, nunca el texto claro
+        const nuevo = {
+          id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()),
+          nombre: v1.valor,
+          correo: correo,
+          usuario: v3.valor,
+          telefono: v4.valor,
+          fecha: v5.valor,
+          documento: documento,
+          hash: await hash(v7.valor),
+          creadoEn: new Date().toISOString(),
+          terminosAceptadosEn: new Date().toISOString()
+        };
+        db.push(nuevo);
+        escribirDB(db);
+
+        // Datos limpios para mostrar en pantalla (sin el hash)
+        return {
+          ok: true,
+          usuario: {
+            nombre: nuevo.nombre,
+            correo: nuevo.correo,
+            usuario: nuevo.usuario,
+            telefono: nuevo.telefono,
+            fecha: nuevo.fecha,
+            documento: nuevo.documento
+          }
+        };
+      }
+
+      // ================= INICIO DE SESIÓN (1.ª fase) =================
+      async function iniciarSesion(identidad, clave) {
+        // El servidor también advierte y rechaza espacios en los extremos
+        // (esta validación NO cuenta como intento fallido)
+        if (Validaciones.tieneEspaciosExtremos(identidad)) {
+          return {
+            ok: false,
+            campo: "log-usuario",
+            mensaje: "No se permiten espacios al inicio ni al final."
+          };
+        }
+        if (Validaciones.tieneEspaciosExtremos(clave)) {
+          return {
+            ok: false,
+            campo: "log-clave",
+            mensaje: "No se permiten espacios al inicio ni al final."
+          };
+        }
+
+        // Si ya está bloqueado, no se intenta nada
+        const estado = estadoBloqueo(identidad);
+        if (estado.bloqueado) {
+          return { ok: false, bloqueado: true, msRestantes: estado.msRestantes };
+        }
+
+        const db = leerDB();
+        const buscada = String(identidad).trim().toLowerCase();
+        const usuario = db.find(
+          (u) => u.correo === buscada || u.usuario.toLowerCase() === buscada
+        );
+        const hashIngresado = await hash(clave);
+
+        // Mensaje genérico: no se dice si falló el usuario o la contraseña
+        if (!usuario || usuario.hash !== hashIngresado) {
+          const registro = registrarFallo(identidad);
+          const quedan = MAX_INTENTOS - registro.fallos;
+          return {
+            ok: false,
+            mensaje:
+              "Usuario o contraseña incorrectos." +
+              (quedan > 0
+                ? " Te quedan " + quedan + " intento(s)."
+                : " Cuenta bloqueada por 60 segundos.")
+          };
+        }
+
+        // Credenciales correctas: se limpian los fallos y se devuelve el
+        // correo para que la interfaz abra la sesión de inmediato.
+        // (El código al correo SOLO existe para recuperar una contraseña
+        //  olvidada: quien recuerda su clave entra directo, sin código.)
+        limpiarIntentos(identidad);
+        return { ok: true, correo: usuario.correo };
+      }
+
+      // ============================================================
+      // VERIFICACIÓN 2FA DEL LOGIN: ELIMINADA.
+      // Antes el inicio de sesión pedía un código enviado al correo
+      // (verificar2FA / reenviarCodigo2FA / clave "demo_2fa"). Ahora el
+      // código SOLO se usa en la recuperación de contraseña (TOKEN_MS,
+      // 30 minutos), que sigue funcionando igual más abajo.
+      // ============================================================
+
+      // ================= RECUPERACIÓN DE CONTRASEÑA =================
+      // El código llega DE VERDAD al correo del usuario mediante
+      // EmailJS: servicio gratuito que envía correos desde el
+      // navegador usando la cuenta que el autor conecte (Gmail, etc.).
+
+      // ¿Ya se pegaron los 3 datos de EmailJS en window.CONFIG_EMAILJS?
+      function emailjsConfigurado() {
+        const c = window.CONFIG_EMAILJS || {};
+        const pendiente = (v) => !v || String(v).indexOf("AQUI_TU") === 0;
+        return !pendiente(c.serviceId) && !pendiente(c.templateId) && !pendiente(c.publicKey);
+      }
+
+      // Envía el correo real con el código de verificación para
+      // RECUPERAR LA CONTRASEÑA (válido 30 minutos).
+      // Devuelve { ok: true } o { ok: false, error: "motivo" }.
+      async function enviarCorreoCodigo(destinatario, nombre, codigo, minutos) {
+        if (!window.emailjs) {
+          return { ok: false, error: "la librería EmailJS no se cargó (revisa tu conexión a internet)." };
+        }
+        if (!emailjsConfigurado()) {
+          return { ok: false, error: "EmailJS aún no está configurado. Abre el archivo HTML, busca con Ctrl+F la línea window.CONFIG_EMAILJS y pega ahí tu Service ID, Template ID y Public Key." };
+        }
+        try {
+          await window.emailjs.send(
+            window.CONFIG_EMAILJS.serviceId,
+            window.CONFIG_EMAILJS.templateId,
+            {
+              to_email: destinatario,   // correo registrado del usuario
+              to_name: nombre,          // nombre completo del usuario
+              codigo: codigo,           // código de 6 dígitos
+              minutos: minutos          // minutos de validez del código
+            },
+            { publicKey: window.CONFIG_EMAILJS.publicKey }
+          );
+          return { ok: true };
+        } catch (e) {
+          return { ok: false, error: (e && e.text) ? e.text : String(e) };
+        }
+      }
+
+      // PASO 1: genera el código y lo envía al correo registrado
+      async function solicitarRecuperacion(correoIngresado) {
+        // Mensaje genérico SIEMPRE: jamás se revela si el correo existe
+        const mensaje = "Si el correo está registrado, recibirás un código de verificación en unos minutos. Revisa tu bandeja de entrada y la carpeta de spam.";
+
+        const buscado = String(correoIngresado).trim().toLowerCase();
+        const usuario = leerDB().find((u) => u.correo === buscado);
+        if (!usuario) return { ok: true, mensaje: mensaje };
+
+        const codigo = String(Math.floor(100000 + Math.random() * 900000));
+
+        // Envío REAL del correo; si falla, no queda nada guardado
+        const envio = await enviarCorreoCodigo(usuario.correo, usuario.nombre, codigo, "30");
+        if (!envio.ok) {
+          return { ok: false, error: envio.error };
+        }
+
+        // Solo si el correo SALIÓ se guarda el código pendiente (30 min)
+        escribirSession("demo_recuperacion", {
+          correo: usuario.correo,
+          codigo: codigo,
+          creadoEn: Date.now(),
+          verificado: false
+        });
+
+        return { ok: true, mensaje: mensaje, enviado: true };
+      }
+
+      // PASO 2: comprueba el código que el usuario escribió
+      function verificarCodigoRecuperacion(codigoIngresado) {
+        const datos = leerSession("demo_recuperacion");
+        if (!datos) {
+          return { ok: false, mensaje: "Primero envía el código a tu correo." };
+        }
+        if (Date.now() - datos.creadoEn > TOKEN_MS) {
+          sessionStorage.removeItem("demo_recuperacion");
+          return { ok: false, mensaje: "El código expiró (dura 30 minutos). Pide uno nuevo." };
+        }
+        if (String(codigoIngresado).trim() !== datos.codigo) {
+          return { ok: false, mensaje: "El código no coincide. Revisa tu correo." };
+        }
+        // Código correcto: se habilita el cambio de contraseña
+        datos.verificado = true;
+        escribirSession("demo_recuperacion", datos);
+        return { ok: true, correo: datos.correo };
+      }
+
+      async function restablecerContrasena(clave, clave2) {
+        const datos = leerSession("demo_recuperacion");
+        if (!datos || !datos.verificado) {
+          return { ok: false, campo: "nueva-clave", mensaje: "Primero verifica el código que llegó a tu correo." };
+        }
+        if (Date.now() - datos.creadoEn > TOKEN_MS) {
+          sessionStorage.removeItem("demo_recuperacion");
+          return { ok: false, campo: "nueva-clave", mensaje: "El código expiró (dura 30 minutos). Empieza de nuevo." };
+        }
+
+        const db = leerDB();
+        const usuario = db.find((u) => u.correo === datos.correo);
+        if (!usuario) {
+          return { ok: false, campo: "nueva-clave", mensaje: "La cuenta ya no existe." };
+        }
+
+        // La nueva contraseña también pasa por todas las reglas NIST
+        const v = Validaciones.contrasena(clave, {
+          nombre: usuario.nombre,
+          usuario: usuario.usuario,
+          correo: usuario.correo
+        });
+        if (!v.ok) return { ok: false, campo: "nueva-clave", mensaje: v.mensaje };
+
+        if (clave !== clave2) {
+          return { ok: false, campo: "nueva-clave2", mensaje: "Las contraseñas no coinciden." };
+        }
+        if ((await hash(clave)) === usuario.hash) {
+          return { ok: false, campo: "nueva-clave", mensaje: "La nueva contraseña no puede ser igual a la anterior." };
+        }
+
+        usuario.hash = await hash(clave);
+        usuario.ultimoCambioClave = new Date().toISOString();
+        escribirDB(db);
+
+        // El código es de un solo uso: se elimina al cambiar la clave
+        sessionStorage.removeItem("demo_recuperacion");
+        return { ok: true };
+      }
+
+      // Crea la sesión cuando la validación fue correcta.
+      // Se usa tanto al registrar una cuenta nueva como después de
+      // verificar el código 2FA: en ambos casos el usuario termina en
+      // la página de bienvenida (index.html).
+      function crearSesion(correo) {
+        escribirSession("demo_sesion", {
+          correo: String(correo).toLowerCase(),
+          iniciadaEn: Date.now()
+        });
+      }
+
+      // ================= SESIÓN ACTIVA =================
+      function sesionActual() {
+        return leerSession("demo_sesion");
+      }
+
+      function cerrarSesion() {
+        sessionStorage.removeItem("demo_sesion");
+      }
+
+      // Datos del usuario para el panel (sin exponer el hash)
+      function obtenerUsuario(correo) {
+        const usuario = leerDB().find((u) => u.correo === String(correo).toLowerCase());
+        if (!usuario) return null;
+        const copia = {};
+        Object.keys(usuario).forEach((k) => {
+          if (k !== "hash") copia[k] = usuario[k];
+        });
+        return copia;
+      }
+
+      // Borra TODO (usuarios, intentos, sesión, 2FA y tokens)
+      function reiniciarDemo() {
+        localStorage.removeItem(CLAVE_DB);
+        localStorage.removeItem(CLAVE_INTENTOS);
+        sessionStorage.clear();
+      }
+
+      // Lo que la interfaz puede usar del servidor
+      return {
+        registrar: registrar,
+        iniciarSesion: iniciarSesion,
+        solicitarRecuperacion: solicitarRecuperacion,
+        verificarCodigoRecuperacion: verificarCodigoRecuperacion,
+        restablecerContrasena: restablecerContrasena,
+        crearSesion: crearSesion,
+        sesionActual: sesionActual,
+        cerrarSesion: cerrarSesion,
+        obtenerUsuario: obtenerUsuario,
+        reiniciarDemo: reiniciarDemo
+      };
+    })();
+  </script>
+
+  <!-- ============================================================
+       BLOQUE 3 DE JAVASCRIPT — APP (interfaz)
+       (antes js/app.js — ahora embebido)
+       Une los formularios con las Validaciones y el Servidor:
+       navegación, botones del ojo, medidores, envíos, cuenta atrás…
+       ============================================================ -->
+  <script>
+    (function () {
+      "use strict";
+
+      // ---------- Utilidades ----------
+      const $ = (selector) => document.querySelector(selector);
+      const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+
+      // Marca un campo con borde rojo y escribe el mensaje bajo él
+      function ponerError(idCampo, mensaje) {
+        const campo = $("#" + idCampo);
+        const aviso = $("#error-" + idCampo);
+        if (campo) campo.classList.add("invalido");
+        if (aviso) aviso.textContent = mensaje;
+      }
+
+      // Limpia todos los errores de un formulario
+      function limpiarErrores(formulario) {
+        formulario.querySelectorAll(".invalido").forEach((el) => el.classList.remove("invalido"));
+        formulario.querySelectorAll(".error").forEach((el) => { el.textContent = ""; });
+      }
+
+      // Devuelve un medidor de fortaleza a su estado inicial
+      function reiniciarMedidor(prefijo) {
+        const relleno = $("#" + prefijo + "-relleno");
+        relleno.style.width = "0";
+        relleno.style.background = "transparent";
+        $("#" + prefijo + "-texto").textContent = "";
+      }
+
+      // ---------- Navegación entre vistas ----------
+      function mostrarVista(nombre) {
+        $$(".vista").forEach((v) => v.classList.remove("activa"));
+        const vista = $("#vista-" + nombre);
+        if (vista) vista.classList.add("activa");
+        // Resalta la pestaña activa (si la vista tiene pestaña)
+        $$(".pestana").forEach((p) => p.classList.toggle("activo", p.dataset.vista === nombre));
+      }
+
+      // Todo elemento con data-vista navega: pestañas y enlaces internos
+      $$("[data-vista]").forEach((boton) => {
+        boton.addEventListener("click", () => mostrarVista(boton.dataset.vista));
+      });
+
+      // ---------- Botones del ojo (ver / ocultar contraseña) ----------
+      $$(".btn-ver").forEach((boton) => {
+        boton.addEventListener("click", () => {
+          const campo = $("#" + boton.dataset.objetivo);
+          if (!campo) return;
+          const visible = campo.type === "text";
+          campo.type = visible ? "password" : "text";
+          boton.textContent = visible ? "👁" : "🙈";
+          campo.focus();
+        });
+      });
+
+      // ---------- Medidores de fortaleza ----------
+      function activarMedidor(idCampo, prefijo) {
+        $("#" + idCampo).addEventListener("input", (evento) => {
+          const puntos = Validaciones.fortaleza(evento.target.value);
+          const niveles = [
+            { ancho: "0%",   color: "transparent", texto: "" },
+            { ancho: "25%",  color: "#dc2626",     texto: "Muy débil" },
+            { ancho: "50%",  color: "#ea580c",     texto: "Débil" },
+            { ancho: "75%",  color: "#ca8a04",     texto: "Aceptable" },
+            { ancho: "100%", color: "#16a34a",     texto: "Fuerte" }
+          ];
+          const nivel = niveles[puntos];
+          const relleno = $("#" + prefijo + "-relleno");
+          relleno.style.width = nivel.ancho;
+          relleno.style.background = nivel.color;
+          $("#" + prefijo + "-texto").textContent = evento.target.value ? nivel.texto : "";
+        });
+      }
+
+      activarMedidor("reg-clave", "medidor-reg");
+      activarMedidor("nueva-clave", "medidor-nueva");
+
+      // ---------- Teléfono: solo números y máximo 10 dígitos ----------
+      // Filtra lo escrito o pegado: borra todo lo que no sea dígito y
+      // corta en 10 caracteres. El maxlength="10" del input redondea la idea.
+      $("#reg-telefono").addEventListener("input", (evento) => {
+        const limpio = evento.target.value.replace(/\D+/g, "").slice(0, 10);
+        if (limpio !== evento.target.value) {
+          evento.target.value = limpio;
+        }
+      });
+
+      // ================= REGISTRO =================
+      const formRegistro = $("#form-registro");
+
+      formRegistro.addEventListener("submit", async (evento) => {
+        evento.preventDefault();
+        limpiarErrores(formRegistro);
+
+        // 1) Lectura de los valores tal como el usuario los escribió
+        const nombreCrudo = $("#reg-nombre").value;
+        const correoCrudo = $("#reg-correo").value;
+        const usuarioCrudo = $("#reg-usuario").value;
+        const telefonoCrudo = $("#reg-telefono").value;
+        const fechaCruda = $("#reg-fecha").value;
+        const documentoCrudo = $("#reg-documento").value;
+        const clave = $("#reg-clave").value;
+        const clave2 = $("#reg-clave2").value;
+        const terminos = $("#reg-terminos").checked;
+
+        // 2) ADVERTENCIA por espacios al inicio o al final:
+        //    no se deja continuar hasta que el usuario los quite
+        const camposRevisados = [
+          ["reg-nombre", nombreCrudo],
+          ["reg-correo", correoCrudo],
+          ["reg-usuario", usuarioCrudo],
+          ["reg-telefono", telefonoCrudo],
+          ["reg-fecha", fechaCruda],
+          ["reg-documento", documentoCrudo],
+          ["reg-clave", clave],
+          ["reg-clave2", clave2]
+        ];
+        let hayEspacios = false;
+        camposRevisados.forEach((par) => {
+          if (Validaciones.tieneEspaciosExtremos(par[1])) {
+            ponerError(par[0], "No se permiten espacios al inicio ni al final. Corrígelo para continuar.");
+            hayEspacios = true;
+          }
+        });
+        if (hayEspacios) return;
+
+        // 3) Valores definitivos, ya sin espacios en los extremos
+        const nombre = Validaciones.limpiar(nombreCrudo);
+        const correo = Validaciones.limpiar(correoCrudo);
+        const usuario = Validaciones.limpiar(usuarioCrudo);
+        const telefono = Validaciones.limpiar(telefonoCrudo);
+        const fecha = Validaciones.limpiar(fechaCruda);
+        const documento = Validaciones.limpiar(documentoCrudo);
+
+        // 4) VALIDACIÓN EN EL CLIENTE (retroalimentación inmediata)
+        const chequeos = [
+          ["reg-nombre", Validaciones.nombreCompleto(nombre)],
+          ["reg-correo", Validaciones.correo(correo)],
+          ["reg-usuario", Validaciones.nombreUsuario(usuario)],
+          ["reg-telefono", Validaciones.telefono(telefono)],
+          ["reg-fecha", Validaciones.fechaNacimiento(fecha)],
+          ["reg-documento", Validaciones.documento(documento)],
+          ["reg-clave", Validaciones.contrasena(clave, { nombre: nombre, usuario: usuario, correo: correo })]
+        ];
+
+        let hayErrores = false;
+        chequeos.forEach((par) => {
+          if (!par[1].ok) {
+            ponerError(par[0], par[1].mensaje);
+            hayErrores = true;
+          }
+        });
+        if (clave !== clave2) {
+          ponerError("reg-clave2", "Las contraseñas no coinciden.");
+          hayErrores = true;
+        }
+        if (!terminos) {
+          ponerError("reg-terminos", "Debes aceptar los términos.");
+          hayErrores = true;
+        }
+        if (hayErrores) return;
+
+        // 5) VALIDACIÓN EN EL SERVIDOR (la que manda de verdad)
+        const respuesta = await Servidor.registrar({
+          nombre: nombre, correo: correo, usuario: usuario, telefono: telefono,
+          fecha: fecha, documento: documento, clave: clave, clave2: clave2, terminos: terminos
+        });
+
+        if (!respuesta.ok) {
+          ponerError(respuesta.campo, respuesta.mensaje);
+          return;
+        }
+
+        // 6) ÉXITO: se guarda la sesión y se lleva al usuario a la página
+        //    de bienvenida (index.html), que lo saluda con su @usuario
+        Servidor.crearSesion(respuesta.usuario.correo);
+
+        formRegistro.reset();
+        reiniciarMedidor("medidor-reg");
+        window.location.href = "index.html";
+      });
+
+      // Botón que llena el formulario de registro con datos de prueba válidos
+      $("#btn-demo").addEventListener("click", () => {
+        mostrarVista("registro");
+        const datos = {
+          "reg-nombre": "María José Pérez",
+          "reg-correo": "maria.jose@ejemplo.com",
+          "reg-usuario": "mariajose",
+          "reg-telefono": "3001234567",
+          "reg-fecha": "2000-05-15",
+          "reg-documento": "1030456789",
+          "reg-clave": "Clave#2024x",
+          "reg-clave2": "Clave#2024x"
+        };
+        Object.keys(datos).forEach((id) => {
+          const campo = $("#" + id);
+          campo.value = datos[id];
+          campo.dispatchEvent(new Event("input", { bubbles: true })); // actualiza el medidor
+        });
+        $("#reg-terminos").checked = true;
+      });
+
+      // ================= INICIO DE SESIÓN =================
+      let cuentaAtras = null;
+
+      // Cuenta atrás visible mientras dura el bloqueo de 60 segundos
+      function iniciarCuentaAtras(ms) {
+        const aviso = $("#log-bloqueo");
+        clearInterval(cuentaAtras);
+        const final = Date.now() + ms;
+        aviso.classList.remove("oculto");
+
+        function tic() {
+          const restante = Math.ceil((final - Date.now()) / 1000);
+          if (restante <= 0) {
+            clearInterval(cuentaAtras);
+            aviso.classList.add("oculto");
+            return;
+          }
+          aviso.textContent = "Demasiados intentos fallidos. Espera " + restante + " s para volver a intentar.";
+        }
+        tic();
+        cuentaAtras = setInterval(tic, 1000);
+      }
+
+      $("#form-login").addEventListener("submit", async (evento) => {
+        evento.preventDefault();
+        limpiarErrores($("#form-login"));
+
+        const identidadCruda = $("#log-usuario").value;
+        const clave = $("#log-clave").value;
+
+        // ADVERTENCIA por espacios al inicio o al final:
+        // NO se deja hacer login hasta que el usuario los quite
+        let hayEspacios = false;
+        if (Validaciones.tieneEspaciosExtremos(identidadCruda)) {
+          ponerError("log-usuario", "No se permiten espacios al inicio ni al final. Corrígelo para continuar.");
+          hayEspacios = true;
+        }
+        if (Validaciones.tieneEspaciosExtremos(clave)) {
+          ponerError("log-clave", "No se permiten espacios al inicio ni al final. Corrígelo para continuar.");
+          hayEspacios = true;
+        }
+        if (hayEspacios) return;
+
+        const identidad = Validaciones.limpiar(identidadCruda);
+
+        let hayErrores = false;
+        if (!identidad) { ponerError("log-usuario", "Escribe tu usuario o correo."); hayErrores = true; }
+        if (!clave) { ponerError("log-clave", "Escribe tu contraseña."); hayErrores = true; }
+        if (hayErrores) return;
+
+        // Se deshabilita el botón un instante mientras se revisan las
+        // credenciales (evita dobles clic)
+        const botonLogin = evento.target.querySelector('button[type="submit"]');
+        botonLogin.disabled = true;
+        botonLogin.textContent = "Verificando…";
+
+        const respuesta = await Servidor.iniciarSesion(identidad, clave);
+
+        botonLogin.disabled = false;
+        botonLogin.textContent = "Iniciar sesión";
+
+        if (!respuesta.ok) {
+          if (respuesta.bloqueado) {
+            iniciarCuentaAtras(respuesta.msRestantes);
+          } else {
+            ponerError(respuesta.campo || "log-clave", respuesta.mensaje);
+          }
+          return;
+        }
+
+        // Credenciales correctas → se abre la sesión y index.html da la
+        // bienvenida. SIN código al correo: ese paso solo existe para
+        // recuperar una contraseña olvidada.
+        Servidor.crearSesion(respuesta.correo);
+        window.location.href = "index.html";
+      });
+
+      // ============================================================
+      // VERIFICACIÓN 2FA (form-2fa / btn-reenviar): ELIMINADA.
+      // El login ya no pide código; el correo con el código se usa
+      // únicamente en "¿Olvidaste tu contraseña?".
+      // ============================================================
+
+      // ================= RECUPERAR CONTRASEÑA =================
+      const formRecuperar = $("#form-recuperar");
+
+      // PASO 1: pedir el envío del código al correo registrado
+      $("#btn-enviar-codigo").addEventListener("click", async () => {
+        limpiarErrores(formRecuperar);
+        $("#rec-mensaje").classList.add("oculto");
+        $("#rec-aviso").classList.add("oculto");
+
+        const correo = Validaciones.limpiar($("#rec-correo").value);
+        const chequeo = Validaciones.correo(correo);
+        if (!chequeo.ok) {
+          ponerError("rec-correo", chequeo.mensaje);
+          return;
+        }
+
+        // El envío tarda unos segundos: se avisa y se bloquea el botón
+        const boton = $("#btn-enviar-codigo");
+        boton.disabled = true;
+        boton.textContent = "Enviando…";
+
+        const respuesta = await Servidor.solicitarRecuperacion(correo);
+
+        boton.disabled = false;
+        boton.textContent = "Enviar código al correo";
+
+        if (!respuesta.ok) {
+          // Problema de configuración o conexión: se explica con claridad
+          $("#rec-aviso").textContent = "No se pudo enviar el correo: " + respuesta.error;
+          $("#rec-aviso").classList.remove("oculto");
+          return;
+        }
+
+        // Mensaje genérico (se muestre o no el envío)
+        $("#rec-mensaje").textContent = respuesta.mensaje;
+        $("#rec-mensaje").classList.remove("oculto");
+        $("#rec-codigo").focus();
+      });
+
+      // PASO 2: verificar el código que llegó al correo
+      formRecuperar.addEventListener("submit", (evento) => {
+        evento.preventDefault();
+        limpiarErrores(formRecuperar);
+
+        const codigo = Validaciones.limpiar($("#rec-codigo").value);
+        if (!/^\d{6}$/.test(codigo)) {
+          ponerError("rec-codigo", "El código tiene exactamente 6 dígitos.");
+          return;
+        }
+
+        const respuesta = Servidor.verificarCodigoRecuperacion(codigo);
+        if (!respuesta.ok) {
+          ponerError("rec-codigo", respuesta.mensaje);
+          return;
+        }
+
+        // Código correcto: se muestra la pantalla de nueva contraseña
+        $("#form-nueva").reset();
+        mostrarVista("nueva");
+      });
+
+      // ================= NUEVA CONTRASEÑA =================
+      // (solo se llega aquí después de verificar el código del correo)
+      $("#form-nueva").addEventListener("submit", async (evento) => {
+        evento.preventDefault();
+        limpiarErrores($("#form-nueva"));
+
+        const clave = $("#nueva-clave").value;
+        const clave2 = $("#nueva-clave2").value;
+
+        // ADVERTENCIA por espacios al inicio o al final
+        let hayEspacios = false;
+        if (Validaciones.tieneEspaciosExtremos(clave)) {
+          ponerError("nueva-clave", "No se permiten espacios al inicio ni al final. Corrígelo para continuar.");
+          hayEspacios = true;
+        }
+        if (Validaciones.tieneEspaciosExtremos(clave2)) {
+          ponerError("nueva-clave2", "No se permiten espacios al inicio ni al final. Corrígelo para continuar.");
+          hayEspacios = true;
+        }
+        if (hayEspacios) return;
+
+        const chequeo = Validaciones.contrasena(clave);
+        if (!chequeo.ok) { ponerError("nueva-clave", chequeo.mensaje); return; }
+        if (clave !== clave2) { ponerError("nueva-clave2", "Las contraseñas no coinciden."); return; }
+
+        const respuesta = await Servidor.restablecerContrasena(clave, clave2);
+        if (!respuesta.ok) {
+          ponerError(respuesta.campo, respuesta.mensaje);
+          return;
+        }
+
+        $("#nueva-mensaje").textContent = "Contraseña actualizada. Ya puedes iniciar sesión.";
+        $("#nueva-mensaje").classList.remove("oculto");
+
+        setTimeout(() => {
+          $("#nueva-mensaje").classList.add("oculto");
+          mostrarVista("login");
+        }, 2500);
+      });
+
+      // ================= BOTÓN GENERAL: REINICIAR DEMO =================
+      $("#btn-reiniciar").addEventListener("click", () => {
+        Servidor.reiniciarDemo();
+        location.reload();
+      });
+
+      // ================= ARRANQUE DE LA PÁGINA =================
+      // 1) ¿Hay sesión activa (sessionStorage)? → página de bienvenida
+      // 2) ¿Se abrió con #login (p. ej. al cerrar sesión)? → inicio de sesión
+      // 3) Si no hay nada → pantalla de registro
+      if (Servidor.sesionActual()) {
+        // Ya hay sesión (se creó al registrar o al iniciar sesión):
+        // la bienvenida vive en index.html
+        window.location.replace("index.html");
+      } else if (location.hash === "#login") {
+        // index.html envía aquí al cerrar sesión: se muestra la
+        // pestaña "Iniciar sesión" directamente
+        mostrarVista("login");
+      } else {
+        mostrarVista("registro");
+      }
+    })();
+  </script>
+</body>
+</html>

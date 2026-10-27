@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Página de bienvenida</title>
+
+  <style>
+    /* ============================================================
+       ESTILOS de la página de bienvenida.
+       Usan las mismas variables de color que validacion.html para
+       que ambas páginas se vean como un solo sistema.
+       ============================================================ */
+
+    /* Variables de color reutilizables en toda la página */
+    :root {
+      --primario: #2563eb;
+      --primario-oscuro: #1e40af;
+      --peligro: #dc2626;
+      --exito: #16a34a;
+      --fondo: #eef2f7;
+      --tarjeta: #ffffff;
+      --borde: #cbd5e1;
+      --texto: #1e293b;
+      --texto-suave: #64748b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 24px 12px;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--fondo);
+      color: var(--texto);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .contenedor { width: 100%; max-width: 520px; }
+
+    /* Tarjeta blanca que envuelve el mensaje de bienvenida */
+    .tarjeta {
+      background: var(--tarjeta);
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+      padding: 24px 20px;
+      margin-top: 12px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+    }
+
+    .tarjeta-centrada { text-align: center; }
+
+    .emoji-grande { font-size: 46px; margin-bottom: 4px; }
+
+    /* Título principal del saludo */
+    .titulo-bienvenida {
+      margin: 6px 0 8px;
+      font-size: 24px;
+      color: var(--primario);
+    }
+
+    /* Cápsula destacada con el @ y el nombre de usuario */
+    .usuario-arroba {
+      display: inline-block;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: var(--primario-oscuro);
+      font-weight: 700;
+      font-size: 20px;
+      padding: 6px 18px;
+      border-radius: 999px;
+      margin: 4px 0 8px;
+    }
+
+    .texto-bienvenida {
+      font-size: 14px;
+      color: var(--texto-suave);
+      margin: 6px 0 10px;
+    }
+
+    /* Tabla con los datos guardados de la cuenta */
+    .tabla-datos {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 10px;
+      text-align: left;
+    }
+    .tabla-datos th,
+    .tabla-datos td {
+      border: 1px solid var(--borde);
+      padding: 7px 9px;
+      text-align: left;
+    }
+    .tabla-datos th { background: #f8fafc; width: 42%; }
+
+    /* Botones principales y secundarios (igual que validacion.html) */
+    .boton {
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 8px;
+      background: var(--primario);
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    .boton:hover { background: var(--primario-oscuro); }
+    .boton-secundario {
+      background: #ffffff;
+      color: var(--primario);
+      border: 1px solid var(--primario);
+    }
+    .boton-secundario:hover { background: #eff6ff; }
+
+    .margen-arriba { margin-top: 14px; }
+
+    /* Alerta por si la sesión ya no existe */
+    .alerta {
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+    .alerta.peligro { background: #fee2e2; color: #7f1d1d; border: 1px solid #fca5a5; }
+    .oculto { display: none !important; }
+
+    /* Firma del autor del trabajo, al pie de la tarjeta */
+    .credito {
+      margin-top: 18px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--borde);
+      font-size: 13px;
+      font-style: italic;
+      color: var(--texto-suave);
+    }
+
+    /* Adaptación a pantallas pequeñas */
+    @media (max-width: 420px) {
+      body { padding: 12px 8px; }
+      .tarjeta { padding: 16px 14px; }
+      .usuario-arroba { font-size: 17px; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="contenedor">
+
+    <!-- ===== PÁGINA DE BIENVENIDA (index.html) =====
+         Esta página SOLO se muestra cuando la validación de la
+         información fue correcta, es decir:
+           - justo después de crear la cuenta (registro exitoso), o
+           - después de iniciar sesión con usuario y contraseña
+             correctos (usuarios que ya tenían cuenta creada).
+         validacion.html es quien redirige hasta aquí. -->
+    <section class="tarjeta tarjeta-centrada" id="tarjeta-bienvenida">
+      <div class="emoji-grande">🎉</div>
+
+      <!-- El saludo y el @usuario se escriben con JavaScript -->
+      <h1 class="titulo-bienvenida">
+        ¡Hola, <span class="usuario-arroba" id="salida-usuario">@…</span>!
+      </h1>
+
+      <p class="texto-bienvenida">
+        La validación de tu información fue correcta.
+        Tu cuenta quedó guardada con estos datos:
+      </p>
+
+      <!-- Tabla que se rellena con JavaScript (los datos del usuario) -->
+      <table class="tabla-datos" id="tabla-usuario">
+        <tbody id="cuerpo-usuario"></tbody>
+      </table>
+
+      <!-- Cierra la sesión y regresa a la pantalla de inicio de sesión -->
+      <button type="button" class="boton margen-arriba" id="btn-salir">Cerrar sesión</button>
+
+      <!-- Firma solicitada -->
+      <p class="credito">Trabajo realizado por Juan Guillermo Gutiérrez</p>
+    </section>
+
+    <!-- Aviso temporal si se abre index.html sin sesión activa -->
+    <div class="alerta peligro oculto" id="aviso-sesion">
+      No hay una sesión activa. Te llevamos al inicio de sesión…
+    </div>
+
+  </main>
+
+  <!-- ============================================================
+       JAVASCRIPT DE LA PÁGINA DE BIENVENIDA
+       1) Revisa si hay una sesión activa (sessionStorage "demo_sesion",
+          escrita por validacion.html cuando la validación fue correcta).
+       2) Busca los datos completos del usuario en localStorage
+          ("demo_usuarios", la "base de datos" de la demo).
+       3) Pinta el saludo con el @usuario, la tabla y la firma.
+       Si NO hay sesión, devuelve al usuario a la pantalla de inicio
+       de sesión (validacion.html).
+       ============================================================ -->
+  <script>
+    (function () {
+      "use strict";
+
+      const $ = (selector) => document.querySelector(selector);
+
+      // Lee una clave JSON de localStorage o sessionStorage sin romper
+      // la página si el almacenamiento está vacío o dañado
+      function leerJSON(clave, almacen) {
+        try {
+          const bruto = almacen.getItem(clave);
+          return bruto ? JSON.parse(bruto) : null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      // Regresa a la pantalla de inicio de sesión de validacion.html
+      // (replace evita "volver" a aquí; #login abre la pestaña correcta)
+      function volverAlLogin() {
+        window.location.replace("validacion.html#login");
+      }
+
+      // Rellena la cápsula @usuario y la tabla de datos.
+      // Se usa textContent (nunca innerHTML) para evitar ataques XSS.
+      function pintarUsuario(usuario) {
+        // 1) Saludo con la @ y el nombre de usuario registrado
+        $("#salida-usuario").textContent = "@" + usuario.usuario;
+
+        // 2) Tabla de resumen (nunca se muestra el hash de la contraseña)
+        const filas = [
+          ["Nombre", usuario.nombre],
+          ["Usuario", usuario.usuario],
+          ["Correo", usuario.correo],
+          ["Teléfono", usuario.telefono],
+          ["Nacimiento", usuario.fecha],
+          ["Documento", usuario.documento]
+        ];
+        const cuerpo = $("#cuerpo-usuario");
+        filas.forEach((fila) => {
+          const tr = document.createElement("tr");
+          const th = document.createElement("th");
+          const td = document.createElement("td");
+          th.textContent = fila[0];
+          td.textContent = fila[1];
+          tr.appendChild(th);
+          tr.appendChild(td);
+          cuerpo.appendChild(tr);
+        });
+      }
+
+      // ----- 1) ¿Hay sesión activa? (la crea validacion.html) -----
+      const sesion = leerJSON("demo_sesion", sessionStorage);
+      if (!sesion || !sesion.correo) {
+        volverAlLogin();
+        return; // el script termina aquí: no hay nada más que pintar
+      }
+
+      // ----- 2) ¿La cuenta todavía existe en la "base de datos"? -----
+      const usuarios = leerJSON("demo_usuarios", localStorage) || [];
+      const usuario = usuarios.find((u) => u.correo === sesion.correo);
+      if (!usuario) {
+        // La cuenta fue borrada: se limpia la sesión falsa y se regresa
+        sessionStorage.removeItem("demo_sesion");
+        volverAlLogin();
+        return;
+      }
+
+      // ----- 3) Todo en orden: se pinta la bienvenida -----
+      pintarUsuario(usuario);
+
+      // ----- 4) Cerrar sesión: borra la sesión y regresa a la pantalla
+      // de inicio de sesión (validacion.html, pestaña "Iniciar sesión")
+      $("#btn-salir").addEventListener("click", () => {
+        sessionStorage.removeItem("demo_sesion");
+        window.location.href = "validacion.html#login";
+      });
+    })();
+  </script>
+</body>
+</html>
